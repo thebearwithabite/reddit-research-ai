@@ -24,6 +24,9 @@ tools:
   - name: "file_tools"
     module: "tools.file_tools"
     enabled: true
+  - name: "reddit_poster"
+    module: "tools.reddit_poster"
+    enabled: true
 
 logging:
   level: "INFO"
