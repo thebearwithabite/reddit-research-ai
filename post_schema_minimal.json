@@ -1,0 +1,6 @@
+{
+  "\u2705 Minimal example": "post_schema_minimal.yaml",
+  "subreddit": "example_subreddit",
+  "title": "Example Post Title",
+  "body": "This is a basic Reddit post body."
+}

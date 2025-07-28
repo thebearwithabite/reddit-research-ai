@@ -1,0 +1,15 @@
+{
+  "subreddit": "example_subreddit",
+  "title": "Example Post Title",
+  "body": "This is the body text of the Reddit post.\nSupports markdown formatting.",
+  "flair_text": "Discussion",
+  "crosspost_to": [
+    "another_subreddit"
+  ],
+  "publish": false,
+  "markdown_draft": "example_post.md",
+  "tags": [
+    "ai",
+    "automation"
+  ]
+}
