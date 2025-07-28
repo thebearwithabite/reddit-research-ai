@@ -1,24 +1,32 @@
-# Default schema for Reddit posts
-title: The Papers That Dream
-subreddit: ArtificialInteligence
-flair: ""
-content_type: markdown  # or 'text'
+# ✅ Full post_schema.yaml with comments
+# This schema defines all supported fields for automated Reddit posting
+
+# Required fields
+subreddit: "example_subreddit"  # Target subreddit to post in
+title: "Example Post Title"      # Title of the Reddit post
 body: |
-  Have you ever wondered what it would sound like if foundational AI research were retold as bedtime stories?
+  This is the body text of the Reddit post.
+  Supports markdown formatting.  
 
-   This is "The Island That Forgets Nothing" — a poetic narrative based on "Attention Is All You Need."
+# Optional metadata
+flair_text: "Discussion"         # Optional flair text to match (fallbacks to flair_id if needed)
+crosspost_to:
+  - "another_subreddit"         # Optional list of additional subreddits to crosspost to
 
-  Listen now, and let me know what it makes you feel:
-  [ Link to episode]
+# Publish mode
+publish: false                   # true = post publicly, false = draft preview only
 
+# Optional for traceability / organization
+markdown_draft: "example_post.md" # If present, will save draft preview to this markdown file
 tags:
-  - AI
-  - storytelling
-  - podcast
-  - transformers
-visibility: public  # or 'draft'
-crosspost_to: []  # optional: other subreddits
-author: max
-timestamp: now
-notes: >
-  You can update 'body' with GPT-generated summaries or use a preset storytelling hook.
+  - ai
+  - automation
+
+---
+
+# ✅ Minimal example: post_schema_minimal.yaml
+# Only the essential fields to generate a post
+
+# subreddit: "example_subreddit"
+# title: "Example Post Title"
+# body: "This is a basic Reddit post body."
