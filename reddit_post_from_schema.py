@@ -1,18 +1,11 @@
-# reddit_post_from_schema.py
-# Production-ready Reddit posting agent with draft preview, error handling, flair, crossposting, logging, and markdown export.
-
 import praw
 import os
 import yaml
+import traceback
 from datetime import datetime
-from slugify import slugify
 
-# ========== Configuration ==========
-REDDIT_LOG_FILE = "outbox/results.log"
-REDDIT_ERROR_LOG = "outbox/errors.log"
-POST_EXPORT_DIR = "outbox/posts"
+OUTBOX_DIR = "outbox"
 
-# ========== Create Reddit Client ==========
 def create_reddit_client():
     return praw.Reddit(
         client_id=os.getenv("REDDIT_CLIENT_ID"),
@@ -22,79 +15,75 @@ def create_reddit_client():
         user_agent="MCP Agent Bot"
     )
 
-# ========== Markdown Export ==========
-def export_markdown(schema):
-    os.makedirs(POST_EXPORT_DIR, exist_ok=True)
-    filename = f"{POST_EXPORT_DIR}/{slugify(schema['title'])}.md"
+def log_to_outbox(content, suffix="log"):
+    if not os.path.exists(OUTBOX_DIR):
+        os.makedirs(OUTBOX_DIR)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{OUTBOX_DIR}/{timestamp}.{suffix}"
     with open(filename, "w") as f:
-        f.write(f"# {schema['title']}\n\n{schema['body']}")
+        f.write(content)
 
-# ========== Logging ==========
-def log_to_file(path, content):
-    with open(path, "a") as log:
-        log.write(f"[{datetime.now()}] {content}\n")
-
-# ========== Load Schema ==========
-def load_schema(schema_path):
-    with open(schema_path, "r") as f:
+def load_schema(filepath="post_schema.yaml"):
+    with open(filepath, "r") as f:
         return yaml.safe_load(f)
 
-# ========== Post to Reddit ==========
-def post_to_reddit(schema, draft_mode=True):
-    reddit = create_reddit_client()
-    subreddit = reddit.subreddit(schema["subreddit"])
-
-    if draft_mode:
-        print(" Draft mode: no post submitted.")
-        print(f"Title: {schema['title']}")
-        print(f"Subreddit: {schema['subreddit']}")
-        print(f"Body:\n{schema['body']}")
-        if schema.get("flair_text") or schema.get("flair_id"):
-            print(f"Flair: {schema.get('flair_text') or schema.get('flair_id')}")
-        export_markdown(schema)
-        log_to_file(REDDIT_LOG_FILE, f" Draft preview: {schema['title']}")
-        return
-
+def post_to_reddit(schema, reddit, publish=False):
     try:
-        if "crosspost_id" in schema:
-            submission = reddit.submission(id=schema["crosspost_id"]).crosspost(
-                subreddit=subreddit,
-                title=schema["title"]
-            )
-        elif "url" in schema:
-            submission = subreddit.submit(
+        subreddit = reddit.subreddit(schema["subreddit"])
+
+        # Flair
+        flair_text = schema.get("flair_text")
+        flair_id = None
+        if flair_text:
+            for flair in subreddit.flair.link_templates:
+                if flair["text"].lower() == flair_text.lower():
+                    flair_id = flair["id"]
+                    break
+
+        # Post body or crosspost
+        if "crosspost_to" in schema:
+            parent = subreddit.submit(
                 title=schema["title"],
-                url=schema["url"]
+                selftext=schema["body"] if "body" in schema else ""
             )
+            results = [f"✅ Original post: r/{schema['subreddit']} → {parent.url}"]
+            for sub in schema["crosspost_to"]:
+                cp = reddit.subreddit(sub).submit_crosspost(parent)
+                results.append(f"↪️ Crossposted to r/{sub}: {cp.url}")
+            return "\n".join(results)
+
         else:
-            submission = subreddit.submit(
-                title=schema["title"],
-                selftext=schema["body"]
-            )
-
-        if "flair_id" in schema or "flair_text" in schema:
-            submission.flair.select(
-                flair_template_id=schema.get("flair_id"),
-                text=schema.get("flair_text")
-            )
-
-        log_to_file(REDDIT_LOG_FILE, f"✅ Posted: {schema['title']} to r/{schema['subreddit']} ({submission.id})")
-        print(f"✅ Successfully posted: https://reddit.com{submission.permalink}")
+            if publish:
+                submission = subreddit.submit(
+                    title=schema["title"],
+                    selftext=schema["body"],
+                    flair_id=flair_id
+                )
+                return f"✅ Posted to r/{schema['subreddit']}: {submission.url}"
+            else:
+                # Draft Mode
+                draft_preview = (
+                    f" Draft mode: no post submitted.\n"
+                    f"Title: {schema['title']}\n"
+                    f"Subreddit: {schema['subreddit']}\n"
+                    f"Body:\n{schema['body']}\n"
+                )
+                if schema.get("markdown_draft"):
+                    with open(schema["markdown_draft"], "w") as f:
+                        f.write(schema["body"])
+                    draft_preview += f"( Markdown saved to {schema['markdown_draft']})\n"
+                return draft_preview
 
     except Exception as e:
-        print(f"❌ Error posting to Reddit: {e}")
-        log_to_file(REDDIT_ERROR_LOG, f"❌ Error: {e} | Title: {schema['title']}")
+        error_log = f"❌ Reddit post failed: {str(e)}\n{traceback.format_exc()}"
+        log_to_outbox(error_log, "err")
+        return error_log
 
-# ========== Entry Point ==========
 if __name__ == "__main__":
-    import argparse
+    schema = load_schema()
+    reddit = create_reddit_client()
+    publish = schema.get("publish", False)
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("schema_path", help="Path to post_schema.yaml")
-    parser.add_argument("--publish", action="store_true", help="Force publish")
-    args = parser.parse_args()
-
-    schema = load_schema(args.schema_path)
-    draft_mode = not args.publish and schema.get("draft", True)
-
-    post_to_reddit(schema, draft_mode=draft_mode)
+    result = post_to_reddit(schema, reddit, publish=publish)
+    log_to_outbox(result)
+    print(result)
