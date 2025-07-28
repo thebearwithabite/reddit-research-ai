@@ -1,0 +1,24 @@
+# Default schema for Reddit posts
+title: The Papers That Dream
+subreddit: ArtificialInteligence
+flair: ""
+content_type: markdown  # or 'text'
+body: |
+  Have you ever wondered what it would sound like if foundational AI research were retold as bedtime stories?
+
+   This is "The Island That Forgets Nothing" — a poetic narrative based on "Attention Is All You Need."
+
+  Listen now, and let me know what it makes you feel:
+  [ Link to episode]
+
+tags:
+  - AI
+  - storytelling
+  - podcast
+  - transformers
+visibility: public  # or 'draft'
+crosspost_to: []  # optional: other subreddits
+author: max
+timestamp: now
+notes: >
+  You can update 'body' with GPT-generated summaries or use a preset storytelling hook.
