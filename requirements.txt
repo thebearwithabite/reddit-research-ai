@@ -1,3 +1,6 @@
 runpod~=1.7.9
 praw
 python-slugify
+openai
+requests
+PyYAML
