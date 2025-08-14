@@ -2,8 +2,11 @@
 
 import openai
 import os
+from dotenv import load_dotenv; load_dotenv()
+os.environ.setdefault("OPENAI_API_KEY", os.getenv("OPEN_AI_KEY", ""))
 import requests
 import yaml
+import json
 
 def load_config(path='mcp_config.yaml'):
     """Loads the configuration file."""
@@ -68,3 +71,17 @@ def ask_model(prompt, model):
         return ask_openai(prompt, model, api_key)
     else:
         raise ValueError(f"Unsupported provider: '{provider}' for model '{model}'.")
+
+def reddit_post_from_instruction(instruction_dict):
+    """
+    Generates a Reddit post (title, body, link) from an instruction dictionary
+    using the ask_model function.
+    """
+    # For now, just echo the instruction back as a dummy response.
+    # In a real scenario, you'd construct a prompt for the LLM here
+    # and parse its response.
+    return {
+        "title": instruction_dict.get("title", ""),
+        "body": instruction_dict.get("body", ""),
+        "link_based_on_structure": instruction_dict.get("link", None)
+    }

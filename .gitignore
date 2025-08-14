@@ -1,0 +1,13 @@
+# Environments
+.env
+.venv/
+
+# Caches
+.DS_Store
+__pycache__/
+chroma_data/
+
+# Box
+inbox/
+logs/
+outbox/

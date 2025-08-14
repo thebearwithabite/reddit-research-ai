@@ -13,7 +13,7 @@ models:
 
   gpt-3.5-turbo:
     provider: "openai"
-    api_key: "${OPENAI_API_KEY}"
+    api_key: "${OPEN_AI_KEY}"
     max_tokens: 3000
     temperature: 0.3
 

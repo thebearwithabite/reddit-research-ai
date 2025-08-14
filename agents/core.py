@@ -45,3 +45,21 @@ class Agent:
             json.dump({"prompt": prompt, "response": response}, f, indent=2)
         print("[MCP] Response saved to outbox/last_response.json")
 
+# --- lightweight prompt packer used by agent1_main.py ---
+def process_agent_prompt(title: str, body: str, link: str | None, context_snippets: list[str] | None = None):
+    """
+    Combines the instruction fields with retrieved memory snippets into a single prompt
+    that downstream LLM code can use. Returns a dict; downstream can return either
+    a finalized post or echo this back unchanged.
+    """
+    context_snippets = context_snippets or []
+    ctx = ""
+    if context_snippets:
+        ctx = "\n\n---\nPrior related context (for tone/framing only):\n" + "\n".join(
+            f"- {s}" for s in context_snippets
+        )
+    return {
+        "title": title.strip(),
+        "body": (body.strip() + ctx).strip(),
+        "link": link
+    }
