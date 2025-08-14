@@ -11,3 +11,4 @@ chroma_data/
 inbox/
 logs/
 outbox/
+data/
